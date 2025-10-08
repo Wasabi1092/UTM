@@ -57,7 +57,19 @@ class Task
     		priority = Priority::medium;
     	}
 
-    	// getters and setters for status and priority
+        string getLocation()
+        {
+            return location;
+        }
+        string getDescription()
+        {
+            return description;
+        }
+        string getName()
+        {
+            return name;
+        }
+
     	Status getStatus() const { return status; }
     	Priority getPriority() const { return priority; }
     	void setStatus(Status s) { status = s; }
@@ -89,7 +101,11 @@ class Task
         void openFile(string flag)
         {
             string exist;
-            if (flag == "--desc")
+            if (flag == "--name")
+            {
+                exist = name;
+            }
+            else if (flag == "--desc")
             {
                 exist = description;
             }
@@ -110,6 +126,10 @@ class Task
             {
                 datetime = *localtime(&start);
                 exist = to_string(datetime.tm_mday) + "/" + to_string(datetime.tm_mon) + "/" + to_string(datetime.tm_year) + " " + to_string(datetime.tm_hour) + ":" + to_string(datetime.tm_min);
+            }
+            else
+            {
+                cout << "Invalid flag: " << flag << endl;
             }
             string cmd = "touch ~/.cache/foo.txt";
             int res = system(cmd.c_str());
@@ -163,7 +183,12 @@ class Task
             {
                 result += input + "\n";
             }
-            if (flag == "--desc")
+            result = result.substr(0, result.length()-1);
+            if (flag == "--name")
+            {
+                name = result;
+            }
+            else if (flag == "--desc")
             {
                 description = result;
             }
@@ -182,6 +207,10 @@ class Task
             else if (flag == "--end-time")
             {
                 end = parseTime(result);
+            }
+            else
+            {
+                cout << "Invalid flag: " << flag << endl;
             }
             file.close();
             return 0;
