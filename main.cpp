@@ -7,7 +7,14 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	// argc is number of args
-	// argv are the args passed in as a vector  
+	// argv are the args passed in as a vector
+
+
+	if (argv[1] = "" )
+
+
+
+
 
 	std::cout << "\033[1;32m" << "✓ Success!" << "\033[0m\n";
 	std::cout << "\033[1;31m" << "✗ Error!" << "\033[0m\n";
