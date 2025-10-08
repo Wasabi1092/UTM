@@ -41,15 +41,28 @@ class Task {
     priority = Priority::medium;
   }
 
-  //   getters and setters for status and priority
+  // getters and setters for status and priority
   Status getStatus() const { return status; }
   Priority getPriority() const { return priority; }
   void setStatus(Status s) { status = s; }
   void setPriority(Priority p) { priority = p; }
+  std::string priorityString(Priority p) {
+    switch (p) {
+      case Priority::high:
+        return "High";
+      case Priority::medium:
+        return "Medium";
+      case Priority::low:
+        return "Low";
+    }
+    return "Unknown";
+  }
 
-  //   print task
+  // print task
   void printTask() {
-    
+    std::cout << "Task ID: " << id << "\nName: " << name << "\nStatus: "
+              << (status == Status::pending ? "Pending" : "Completed")
+              << "\nPriority: " << priorityString(priority) << "\n\n";
   }
 
   bool edit(int id, std::string flag, std::string value);
