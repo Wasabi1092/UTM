@@ -2,4 +2,4 @@
 *.o
 Makefile
 main
-/nlohmann/
+/nlohmann/*
