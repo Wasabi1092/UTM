@@ -1,4 +1,8 @@
 #include <iostream>
+#include <string>
+#include <sstream>
+
+using namespace std;
 
 #include "headers/ListTasks.hpp"
 #include "headers/Task.hpp"
