@@ -5,8 +5,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <filesystem>
 
 using namespace std;
+
 
 struct tm datetime;
 
@@ -45,17 +47,34 @@ class Task
         }
         int edit(int id, string flag)
         {
-            openFile();
-            ifstream file("~/.cache/foo.txt");
+            string home = getenv("HOME");
+            ifstream file( home + "/.cache/foo.txt");
             string input;
             string result = "";
-            std::cout << file.is_open() << std::endl;
             while (getline(file, input))
             {
-                cout << input << endl;
-                result += input;
+                result += input + "\n";
             }
-            cout << result << endl;
+            if (flag == "--desc")
+            {
+                description = result;
+            }
+            else if (flag == "--loc")
+            {
+                location = result;
+            }
+            else if (flag == "--sub")
+            {
+                subject = result;
+            }
+            else if (flag == "--start-time")
+            {
+                start = parseTime(result);
+            }
+            else if (flag == "--end-time")
+            {
+                end = parseTime(result);
+            }
             file.close();
             return 0;
         }
