@@ -1,4 +1,5 @@
 #include <iostream>
+<<<<<<< HEAD
 #include <string>
 #include <sstream>
 
@@ -35,4 +36,15 @@ int main(int argc, char* argv[]) {
   tasksList.listAllTasks();
 
   return 0;
+=======
+#include "headers/Task.hpp"
+
+int main(int argc, char* argv[])
+{
+    // argc is number of args
+    // argv are the args passed in as a vector
+    Task task;
+    task.edit(0, "e");
+    return 0;
+>>>>>>> 6fb67b4 (feat: add edit tasks)
 }
