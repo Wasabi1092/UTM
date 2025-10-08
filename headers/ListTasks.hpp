@@ -11,7 +11,7 @@ class ListTasks
 private:
 	std::vector<Task> tasks;
 
-	//   static helper function to compare priority
+	//	static helper function to compare priority
 	static bool comparePriority(const Task &a, const Task &b)
 	{
 		return (static_cast<int>(a.getPriority()) >
