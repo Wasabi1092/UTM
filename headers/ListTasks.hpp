@@ -1,13 +1,12 @@
 #ifndef __LISTTASKS_H__
 #define __LISTTASKS_H__
 
-// #include"Tasks.hpp"
 #include <vector>
+
+#include "Task.hpp"
 using namespace std;
 
-struct Tasks {
-    
-};
+struct Tasks {};
 
 class ListTasks {
  private:
