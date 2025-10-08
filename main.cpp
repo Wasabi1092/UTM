@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "ListTasks.hpp"
-#include "Task.hpp"
+#include "headers/ListTasks.hpp"
+#include "headers/Task.hpp"
 
 int main(int argc, char* argv[]) {
   // argc is number of args

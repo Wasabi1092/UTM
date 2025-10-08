@@ -47,6 +47,11 @@ class Task {
   void setStatus(Status s) { status = s; }
   void setPriority(Priority p) { priority = p; }
 
+  //   print task
+  void printTask() {
+    
+  }
+
   bool edit(int id, std::string flag, std::string value);
 };
 

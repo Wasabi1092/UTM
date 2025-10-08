@@ -42,7 +42,8 @@ class ListTasks {
       // print pending tasks
       std::cout << "========== PENDING TASKS =========\n";
       for (auto p : pendingTasks) {
-        // print tasks (helper function?)
+        // print tasks (helper function)
+        p.printTask();
       }
     } else {
       std::cout << "No pending tasks.\n";
@@ -56,7 +57,8 @@ class ListTasks {
       // print completed tasks
       std::cout << "========== COMPLETED TASKS =========\n";
       for (auto c : completedTasks) {
-        // print tasks (helper function?)
+        // print tasks (helper function)
+        c.printTask();
       }
     } else {
       std::cout << "No completed tasks.\n";
