@@ -11,18 +11,18 @@ class ListTasks
 private:
 	std::vector<Task> tasks;
 
-	//   static helper function to compare priority
+	//	static helper function to compare priority
 	static bool comparePriority(const Task &a, const Task &b)
 	{
-		return (static_cast<int>(a.getPriority()) > static_cast<int>(b.getPriority()));
+		return (static_cast<int>(a.getPriority()) >
+				static_cast<int>(b.getPriority()));
 	}
 
 public:
 	//  temporary add task function for testing only
 	void addTasks(const Task &task) { tasks.push_back(task); }
 
-	//  list all task, grouped by status (pending / completed), ordered by
-	//  priority levels
+	//  list all task, grouped by status (pending / completed), ordered by priority levels
 	void listAllTasks() const
 	{
 		// vector for pending and completed tasks

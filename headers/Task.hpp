@@ -4,19 +4,17 @@
 #include <ctime>
 #include <iostream>
 
-using namespace std;
-
 struct tm datetime;
 
 // define status of a task
-enum struct Status
+enum class Status
 {
 	pending,
 	completed
 };
 
 // define priority levels
-enum struct Priority
+enum class Priority
 {
 	low,
 	medium,
@@ -54,21 +52,34 @@ public:
 		priority = Priority::medium;
 	}
 
-	Task(string name)
-
-		//   getters and setters for status and priority
-		Status getStatus() const
-	{
-		return status;
-	}
+	// getters and setters for status and priority
+	Status getStatus() const { return status; }
 	Priority getPriority() const { return priority; }
 	void setStatus(Status s) { status = s; }
 	void setPriority(Priority p) { priority = p; }
+	std::string priorityString(Priority p)
+	{
+		switch (p)
+		{
+		case Priority::high:
+			return "High";
+		case Priority::medium:
+			return "Medium";
+		case Priority::low:
+			return "Low";
+		}
+		return "Unknown";
+	}
 
-	//   print task
+	// print task
 	void printTask()
 	{
-		cout << name
+		std::cout << "Task ID: " << id << "\n"
+				  << "Name: " << name << "\n"
+				  << "Status: "
+				  << (status == Status::pending ? "Pending" : "Completed")
+				  << "\n"
+				  << "Priority: " << priorityString(priority) << "\n\n";
 	}
 
 	bool edit(int id, std::string flag, std::string value);

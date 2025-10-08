@@ -4,63 +4,35 @@
 
 using namespace std;
 
-int main(int argc, char* argv[])
-{
-	// argc is number of args
-	// argv are the args passed in as a vector
+#include "headers/ListTasks.hpp"
+#include "headers/Task.hpp"
 
+int main(int argc, char* argv[]) {
+  // argc is number of args
+  // argv are the args passed in as a vector
+  ListTasks tasksList;
 
-	if (argv[1] = "" )
+  Task t1;
+  Task t2;
+  Task t3;
+  Task t4;
 
+  t1.setPriority(Priority::high);
+  t2.setPriority(Priority::medium);
+  t3.setPriority(Priority::low);
+  t4.setPriority(Priority::high);
 
+  t1.setStatus(Status::completed);
+  t2.setStatus(Status::pending);
+  t3.setStatus(Status::pending);
+  t4.setStatus(Status::completed);
 
+  tasksList.addTasks(t1);
+  tasksList.addTasks(t2);
+  tasksList.addTasks(t3);
+  tasksList.addTasks(t4);
 
+  tasksList.listAllTasks();
 
-	std::cout << "\033[1;32m" << "✓ Success!" << "\033[0m\n";
-	std::cout << "\033[1;31m" << "✗ Error!" << "\033[0m\n";
-	std::cout << "\033[1;34m" << "ℹ Info message" << "\033[0m\n";
-	// std::cout << "\033[2J\033[H"; // clear screen & move cursor to top
-
-
-
-	while (true) {
-	string line;
-	cout << "> ";
-	getline(cin, line);
-
-	if (line == "exit") break;
-
-
-	istringstream iss(line);
-	vector<string> tokens;
-	string word;
-
-
-	while (iss >> word) {
-	tokens.push_back(word);
-	}
-
-	if (tokens.empty()) continue; // skip empty lines
-
-
-
-	// add
-
-
-	// edit
-
-
-	// delete
-
-
-
-
-
-
-
-
-
-	}
-
-	return 0;
+  return 0;
 }
