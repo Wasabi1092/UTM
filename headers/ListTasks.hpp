@@ -4,14 +4,15 @@
 #include <vector>
 
 #include "Task.hpp"
-using namespace std;
-
-struct Tasks {};
 
 class ListTasks {
  private:
-  vector<Tasks> tasks;
+  std::vector<Task> tasks;
 
  public:
+  //  list all task, grouped by status (pending / completed)
+  void listAllTasks() const;
 };
+
+
 #endif  // __LISTTASKS_H__
