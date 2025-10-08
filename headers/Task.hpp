@@ -3,6 +3,10 @@
 
 #include <ctime>
 #include <iostream>
+#include <nlohmann/json.hpp>
+
+using namespace std;
+using json = nlohmann::json;
 
 struct tm datetime;
 
@@ -21,8 +25,7 @@ enum class Priority
 	high
 };
 
-class Task
-{
+class Task {
 private:
 	int id;
 	static int next;
@@ -37,8 +40,7 @@ private:
 	Priority priority;
 
 public:
-	Task()
-	{
+	Task() {
 		next++;
 		id = next;
 		name = "Task " + std::to_string(id);
@@ -57,8 +59,7 @@ public:
 	Priority getPriority() const { return priority; }
 	void setStatus(Status s) { status = s; }
 	void setPriority(Priority p) { priority = p; }
-	std::string priorityString(Priority p)
-	{
+	std::string priorityString(Priority p) {
 		switch (p)
 		{
 		case Priority::high:
@@ -83,6 +84,28 @@ public:
 	}
 
 	bool edit(int id, std::string flag, std::string value);
+
+
+
+    json toJSON() {
+        json j;
+        j["id"] = id;
+        j["name"] = name;
+        j["status"] = status;
+        j["priority"] = priority;
+        return j;
+    }
+
+
+
+
+
+
+
+
+
+
+
 };
 
 int Task::next = 0;
