@@ -19,12 +19,12 @@ std::vector<std::string> splitKey(const std::string &path)
 // load json file
 json loadConfig(const std::string &path)
 {
-    std::ifstream f(path);
+    std::ifstream file(path);
     json j;
-    if (f.is_open())
+    if (file.is_open())
     {
-        f >> j;
-        f.close();
+        file >> j;
+        file.close();
     }
     else
     {
