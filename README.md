@@ -45,7 +45,7 @@ why we chose UTM
 
 ### Prerequisites
 - Linux or WSL environment
-- g++ (C++17 or higher)
+- g++ (C++20 or higher)
 - `make`
 - [nlohmann/json](https://github.com/nlohmann/json) library (DOUBLE CHECK IF WE REALLY USE IT)
 
