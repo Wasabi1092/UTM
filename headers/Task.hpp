@@ -10,6 +10,10 @@
 
 using namespace std;
 
+#include <nlohmann/json.hpp>
+
+using namespace std;
+using json = nlohmann::json;
 
 struct tm datetime;
 
