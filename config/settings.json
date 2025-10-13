@@ -1,0 +1,32 @@
+{
+    "app": {
+        "name": "Ultimate Task Manager",
+        "version": "1.0.0",
+        "author": "JXM (JAM)"
+    },
+    "storage": {
+        "type": "file",
+        "path": "../data.json",
+        "auto_save": true
+    },
+    "display": {
+        "theme": "dark",
+        "show_completed_tasks": true,
+        "sort_order": "due_date",
+        "date_format": "%Y-%m-%d"
+    },
+    "subjects": {
+        "work": {
+            "color": "blue"
+        },
+        "study": {
+            "color": "red"
+        },
+        "personal": {
+            "color": "green"
+        }
+    },
+    "limits": {
+        "max_tasks": 100000
+    }
+}
