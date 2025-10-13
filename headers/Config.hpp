@@ -1,3 +1,6 @@
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -32,3 +35,5 @@ json loadConfig(const std::string &path)
     }
     return j;
 }
+
+#endif // CONFIG_HPP
