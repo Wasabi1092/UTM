@@ -23,14 +23,14 @@ enum class Priority
 
 class Task
 {
-private:
-    int id;
-    std::string name;
-    time_t start;
-    time_t end;
-    string location;
-    string description;
-    string subject;
+    private:
+    	int id;
+    	std::string name;
+    	time_t start;
+    	time_t end;
+    	string location;
+			string description;
+			string subject;
 
     // adding status and priority levels
     int status;   // 0 - 100
