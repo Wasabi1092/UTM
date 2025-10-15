@@ -3,16 +3,15 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "json.hpp"
 #include "Task.hpp"
 #include <algorithm>
 #include <vector>
 #include <sqlite3.h>
 #include <cstdlib>
+#include <map>
 #include <ctime>
 
 using namespace std;
-using json = nlohmann::json;
 
 namespace util {
 
@@ -34,9 +33,8 @@ bool initDatabase() {
 					"description TEXT,"
 					"location TEXT,"
 					"subject TEXT,"
-					"list_name TEXT NOT NULL,"
-					"start_time INTEGER,"
-					"end_time INTEGER,"
+					"start_time TIMESTAMP,"
+					"end_time TIMESTAMP,"
 					"status INTEGER DEFAULT 0,"
 					"priority INTEGER DEFAULT 1"
 					");";
@@ -61,64 +59,76 @@ void closeDatabase() {
 	}
 }
 
-// load lists from data.json
-json loadLists() {
-	ifstream file("data.json");
-	json j;
-	if (file.is_open()) {
-		file >> j;
-		file.close();
+// Parse time string to time_t
+time_t parseTime(const string& result) {
+	time_t time;
+	struct tm datetime;
+
+	// expected format is dd/mm/yyyy hh:mm
+	try {
+		int index = result.find(" ");
+		string date = result.substr(0, index);
+		string time_string = result.substr(index + 1, result.length() - index);
+
+		index = date.find("/");
+		datetime.tm_mday = stoi(date.substr(0, index));
+		date = date.substr(index + 1, date.length() - 2);
+		index = date.find("/");
+		datetime.tm_mon = stoi(date.substr(0, index)) - 1;
+		date = date.substr(index + 1, date.length() - 2);
+		datetime.tm_year = stoi(date.substr(0, 4)) - 1900;
+
+		index = time_string.find(":");
+		datetime.tm_hour = stoi(time_string.substr(0, index));
+		datetime.tm_min = stoi(time_string.substr(index + 1, 2));
+
+		datetime.tm_isdst = -1;
+
+		time = mktime(&datetime);
+		return time;
 	}
-	return j;
+	catch (...) {
+		cout << "Invalid Time string format" << endl;
+		cout << "Please ensure the format is dd/mm/yyyy hh:mm" << endl;
+		cout << "You provided: " << result << endl;
+		return 0;
+	}
+}
+
+map<string, string> loadLists() {
+    map<string, string> config;
+	return config;
 }
 
 // add a new task
-bool addTask(const string& listName, const string& taskName, const string& description = "",
-			const string& location = "", const string& subject = "",
-			Priority priority = Priority::medium) {
+bool writeTask(Task task) {
 	if (!db) {
 		cerr << "Database not initialized" << endl;
 		return false;
 	}
-
-	json lists = loadLists();
-	if (lists.find(listName) == lists.end()) {
-		cerr << "List '" << listName << "' not found in data.json" << endl;
-		return false;
-	}
-
-	const char* sql = "INSERT INTO tasks (name, description, location, subject, list_name, start_time, end_time, status, priority) "
-					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
-
+	const char* sql = "INSERT INTO tasks (name, description, location, subject, start_time, end_time, status, priority) "
+					"VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
-
-	time_t now;
-	time(&now);
-
-	sqlite3_bind_text(stmt, 1, taskName.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 2, description.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 3, location.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 4, subject.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 5, listName.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_int64(stmt, 6, now);
-	sqlite3_bind_int64(stmt, 7, now);
-	sqlite3_bind_int(stmt, 8, 0); // Status::pending
-	sqlite3_bind_int(stmt, 9, static_cast<int>(priority));
-
+	sqlite3_bind_text(stmt, 1, task.getName().c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, task.getDescription().c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 3, task.getLocation().c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 4, task.getSubject().c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_int64(stmt, 5, task.getStart());
+	sqlite3_bind_int64(stmt, 6, task.getEnd());
+	sqlite3_bind_int(stmt, 7, task.getStatus()); // Status::pending
+	sqlite3_bind_int(stmt, 8, task.getPriority());
 	rc = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
-
 	if (rc != SQLITE_DONE) {
 		cerr << "Failed to insert task: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
-
-	cout << "Task '" << taskName << "' added to list '" << listName << "'" << endl;
+	cout << "Task '" << task.getName() << "' added to list '" << task.getSubject() << "'" << endl;
 	return true;
 }
 
@@ -138,10 +148,25 @@ bool editTask(int taskId, const string& field, const string& newValue) {
 		return false;
 	}
 
-	sqlite3_bind_text(stmt, 1, newValue.c_str(), -1, SQLITE_STATIC);
+	if (field == "priority" || field == "status")
+	{
+	    sqlite3_bind_int(stmt, 1, stoi(newValue));
+	}
+	else if (field == "start_time" || field == "end_time")
+	{
+	    time_t time = parseTime(newValue);
+	    sqlite3_bind_int64(stmt, 1, time);
+	}
+	else
+	{
+	    sqlite3_bind_text(stmt, 1, newValue.c_str(), -1, SQLITE_STATIC);
+	}
+
 	sqlite3_bind_int(stmt, 2, taskId);
 
 	rc = sqlite3_step(stmt);
+
+	cout << sql << endl;
 	sqlite3_finalize(stmt);
 
 	if (rc != SQLITE_DONE) {
@@ -183,65 +208,59 @@ bool deleteTask(int taskId) {
 	return true;
 }
 
-// show tasks from a specific list
-bool showList(const string& listName) {
+std::vector<Task* > readTasks(int rc, sqlite3_stmt* stmt){
+    bool found = false;
+    std::vector<Task*> tasks;
+    Task* curr_task;
+   	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+  		found = true;
+        int id = sqlite3_column_int(stmt, 0);
+       	const char* name = (const char*)sqlite3_column_text(stmt, 1);
+       	const char* description = (const char*)sqlite3_column_text(stmt, 2);
+       	const char* location = (const char*)sqlite3_column_text(stmt, 3);
+       	const char* subject = (const char*)sqlite3_column_text(stmt, 4);
+        uint64_t start_time = sqlite3_column_int64(stmt, 5);
+        uint64_t end_time = sqlite3_column_int64(stmt, 6);
+       	int status = sqlite3_column_int(stmt, 7);
+       	int priority = sqlite3_column_int(stmt, 8);
+        curr_task = new Task(name, description, location, subject, priority);
+        curr_task->setId(id);
+        curr_task->setStatus(status);
+        curr_task->setStart(static_cast<time_t>(start_time));
+        curr_task->setEnd(static_cast<time_t>(end_time));
+        tasks.push_back(curr_task);
+    }
+   	sqlite3_finalize(stmt);
+    return tasks;
+}
+
+// show tasks from a specific subject
+bool showSubject(const string& subjectName) {
 	if (!db) {
 		cerr << "Database not initialized" << endl;
 		return false;
 	}
 
-	json lists = loadLists();
-	if (lists.find(listName) == lists.end()) {
-		cerr << "List '" << listName << "' not found in data.json" << endl;
-		return false;
-	}
+	const char* sql = "SELECT * FROM tasks WHERE subject = ? ORDER BY priority DESC, id;";
 
-	const char* sql = "SELECT * FROM tasks WHERE list_name = ? ORDER BY priority DESC, id;";
+   	sqlite3_stmt* stmt;
+   	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+   	if (rc != SQLITE_OK) {
+  		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
+  		return false;
+   	}
 
-	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
-	if (rc != SQLITE_OK) {
-		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
-		return false;
-	}
+   	sqlite3_bind_text(stmt, 1, subjectName.c_str(), -1, SQLITE_STATIC);
 
-	sqlite3_bind_text(stmt, 1, listName.c_str(), -1, SQLITE_STATIC);
+    std::vector<Task* > tasks = readTasks(rc, stmt);
 
-	cout << "========== " << listName << " TASKS ==========" << endl;
+	cout << "========== " << subjectName << " TASKS ==========" << endl;
 	bool found = false;
 
-	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		found = true;
-		int id = sqlite3_column_int(stmt, 0);
-		const char* name = (const char*)sqlite3_column_text(stmt, 1);
-		const char* description = (const char*)sqlite3_column_text(stmt, 2);
-		const char* location = (const char*)sqlite3_column_text(stmt, 3);
-		const char* subject = (const char*)sqlite3_column_text(stmt, 4);
-		int status = sqlite3_column_int(stmt, 8);
-		int priority = sqlite3_column_int(stmt, 9);
-
-		cout << "Task ID: " << id << endl;
-		cout << "Name: " << (name ? name : "") << endl;
-		cout << "Description: " << (description ? description : "") << endl;
-		cout << "Location: " << (location ? location : "") << endl;
-		cout << "Subject: " << (subject ? subject : "") << endl;
-		cout << "Status: " << (status == 0 ? "Pending" : "Completed") << endl;
-		cout << "Priority: ";
-		switch (priority) {
-			case 0: cout << "Low"; break;
-			case 1: cout << "Medium"; break;
-			case 2: cout << "High"; break;
-			default: cout << "Unknown"; break;
-		}
-		cout << endl << endl;
+	for (int i=0; i<tasks.size() ; i++)
+	{
+	    tasks[i]->printTask();
 	}
-
-	sqlite3_finalize(stmt);
-
-	if (!found) {
-		cout << "No tasks found in list '" << listName << "'" << endl;
-	}
-
 	return true;
 }
 
@@ -252,7 +271,7 @@ bool showAll() {
 		return false;
 	}
 
-	const char* sql = "SELECT * FROM tasks ORDER BY list_name, priority DESC, id;";
+	const char* sql = "SELECT * FROM tasks ORDER BY subject, priority DESC, id;";
 
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
@@ -260,49 +279,16 @@ bool showAll() {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
+	std::vector<Task *> tasks = readTasks(rc, stmt);
 
-	string currentList = "";
-	bool found = false;
-
-	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		found = true;
-		const char* listName = (const char*)sqlite3_column_text(stmt, 5);
-
-		if (currentList != listName) {
-			currentList = listName;
-			cout << "========== " << listName << " TASKS ==========" << endl;
-		}
-
-		int id = sqlite3_column_int(stmt, 0);
-		const char* name = (const char*)sqlite3_column_text(stmt, 1);
-		const char* description = (const char*)sqlite3_column_text(stmt, 2);
-		const char* location = (const char*)sqlite3_column_text(stmt, 3);
-		const char* subject = (const char*)sqlite3_column_text(stmt, 4);
-		int status = sqlite3_column_int(stmt, 8);
-		int priority = sqlite3_column_int(stmt, 9);
-
-		cout << "Task ID: " << id << endl;
-		cout << "Name: " << (name ? name : "") << endl;
-		cout << "Description: " << (description ? description : "") << endl;
-		cout << "Location: " << (location ? location : "") << endl;
-		cout << "Subject: " << (subject ? subject : "") << endl;
-		cout << "Status: " << (status == 0 ? "Pending" : "Completed") << endl;
-		cout << "Priority: ";
-		switch (priority) {
-			case 0: cout << "Low"; break;
-			case 1: cout << "Medium"; break;
-			case 2: cout << "High"; break;
-			default: cout << "Unknown"; break;
-		}
-		cout << endl << endl;
+	for (int i=0; i<tasks.size(); i++)
+	{
+	    tasks[i]->printTask();
 	}
-
-	sqlite3_finalize(stmt);
-
-	if (!found) {
-		cout << "No tasks found" << endl;
+	if (tasks.size() == 0)
+	{
+	    cout << "No Tasks Found" << endl;
 	}
-
 	return true;
 }
 
@@ -367,41 +353,7 @@ string getTaskField(int taskId, const string& field) {
 	return result;
 }
 
-// Parse time string to time_t
-time_t parseTime(const string& result) {
-	time_t time;
-	struct tm datetime;
 
-	// expected format is dd/mm/yyyy hh:mm
-	try {
-		int index = result.find(" ");
-		string date = result.substr(0, index);
-		string time_string = result.substr(index + 1, result.length() - index);
-
-		index = date.find("/");
-		datetime.tm_mday = stoi(date.substr(0, index));
-		date = date.substr(index + 1, date.length() - 2);
-		index = date.find("/");
-		datetime.tm_mon = stoi(date.substr(0, index)) - 1;
-		date = date.substr(index + 1, date.length() - 2);
-		datetime.tm_year = stoi(date.substr(0, 4)) - 1900;
-
-		index = time_string.find(":");
-		datetime.tm_hour = stoi(time_string.substr(0, index));
-		datetime.tm_min = stoi(time_string.substr(index + 1, 2));
-
-		datetime.tm_isdst = -1;
-
-		time = mktime(&datetime);
-		return time;
-	}
-	catch (...) {
-		cout << "Invalid Time string format" << endl;
-		cout << "Please ensure the format is dd/mm/yyyy hh:mm" << endl;
-		cout << "You provided: " << result << endl;
-		return 0;
-	}
-}
 
 // Open file for editing with current value
 bool openFileForEdit(const string& currentValue) {
