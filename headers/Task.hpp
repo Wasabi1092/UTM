@@ -38,8 +38,8 @@ class Task
     	time_t start;
     	time_t end;
     	string location;
-        string description;
-        string subject;
+			string description;
+			string subject;
 
     	// adding status and priority levels
     	Status status;
