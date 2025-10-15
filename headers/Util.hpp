@@ -18,38 +18,54 @@ namespace util {
 // database connection
 sqlite3* db = nullptr;
 
-// initialise database and create tables
+// INITIALISE DATABASE
 bool initDatabase() {
+	// check if database file exists
 	int rc = sqlite3_open("tasks.db", &db);
 	if (rc) {
 		cerr << "Can't open database: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
+	
+	// create tables if they don't exist
+	const char* createTables[] = {
+		// tasks table (without list_name)
+		"CREATE TABLE IF NOT EXISTS tasks ("
+		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
+		"name TEXT NOT NULL,"
+		"description TEXT,"
+		"location TEXT,"
+		"subject TEXT,"
+		"start_time TIMESTAMP,"
+		"end_time TIMESTAMP,"
+		"status INTEGER DEFAULT 0,"
+		"priority INTEGER DEFAULT 1"
+		");",
+		
+		// lists table
+		"CREATE TABLE IF NOT EXISTS subjects ("
+		"name TEXT PRIMARY KEY UNIQUE NOT NULL,"
+		"color TEXT NOT NULL"
+		");",
+	};
+	
 
-	// create table if it doesn't exist
-	const char* sql = "CREATE TABLE IF NOT EXISTS tasks ("
-					"id INTEGER PRIMARY KEY AUTOINCREMENT,"
-					"name TEXT NOT NULL,"
-					"description TEXT,"
-					"location TEXT,"
-					"subject TEXT,"
-					"start_time TIMESTAMP,"
-					"end_time TIMESTAMP,"
-					"status INTEGER DEFAULT 0,"
-					"priority INTEGER DEFAULT 1"
-					");";
-
-	// execute the sql statement
+	// execute all create table statements
 	char* errMsg = 0;
-	rc = sqlite3_exec(db, sql, 0, 0, &errMsg);
-	if (rc != SQLITE_OK) {
-		cerr << "SQL error: " << errMsg << endl;
-		sqlite3_free(errMsg);
-		return false;
+	for (int i = 0; i < 2; i++) {
+		// execute for each table
+		rc = sqlite3_exec(db, createTables[i], 0, 0, &errMsg);
+		if (rc != SQLITE_OK) {
+			cerr << "SQL error creating table " << i << ": " << errMsg << endl;
+			sqlite3_free(errMsg);
+			return false;
+		}
 	}
-	// if successful then return true`
+	
+	// return true if successful
 	return true;
 }
+
 
 // close database connection
 void closeDatabase() {
@@ -123,6 +139,7 @@ bool writeTask(Task task) {
 	sqlite3_bind_int(stmt, 7, task.getStatus()); // Status::pending
 	sqlite3_bind_int(stmt, 8, task.getPriority());
 	rc = sqlite3_step(stmt);
+	int taskId = sqlite3_last_insert_rowid(db);
 	sqlite3_finalize(stmt);
 	if (rc != SQLITE_DONE) {
 		cerr << "Failed to insert task: " << sqlite3_errmsg(db) << endl;
@@ -134,6 +151,7 @@ bool writeTask(Task task) {
 
 // edit a task
 bool editTask(int taskId, const string& field, const string& newValue) {
+	// check database
 	if (!db) {
 		cerr << "Database not initialized" << endl;
 		return false;
@@ -390,7 +408,38 @@ bool editTaskInteractive(int taskId, const string& field) {
 	// Read edited content
 	string newValue = readEditedContent();
 
+	// Handle special cases for time fields
+	if (field == "start_time" || field == "end_time") {
+		time_t parsedTime = parseTime(newValue);
+		if (parsedTime == 0) {
+			return false;
+		}
+		return editTask(taskId, field, to_string(parsedTime));
+	}
 
-	return editTask(taskId, field, newValue);
+	// Update the field
+	string sql = "UPDATE tasks SET " + field + " = ? WHERE id = ?;";
+
+	sqlite3_stmt* stmt;
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
+	if (rc != SQLITE_OK) {
+		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+
+	sqlite3_bind_text(stmt, 1, newValue.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 2, taskId);
+
+	rc = sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+
+	if (rc != SQLITE_DONE) {
+		cerr << "Failed to update task: " << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+
+	cout << "Task " << taskId << " field '" << field << "' updated" << endl;
+	return true;
 }
+
 }
