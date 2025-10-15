@@ -8,19 +8,12 @@
 #include <fstream>
 #include <filesystem>
 
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 
 using namespace std;
 using json = nlohmann::json;
 
 struct tm datetime;
-
-// define status of a task
-enum class Status
-{
-	pending,
-	completed
-};
 
 // define priority levels
 enum class Priority
@@ -42,8 +35,8 @@ class Task
         string subject;
 
     	// adding status and priority levels
-    	Status status;
-    	Priority priority;
+    	int status; //0 - 100
+    	int priority; // 1-5s
 
     public:
     	Task(int num)
@@ -56,10 +49,10 @@ class Task
     		description = "";
             subject = "";
     		// adding status and priority by default
-    		status = Status::pending;
+    		status = 0;
     		priority = Priority::medium;
     	}
-    	
+
     	int getId() const { return id; }
     	void setId(int newId) { id = newId; }
     	void setName(const std::string& newName) { name = newName; }
@@ -68,7 +61,7 @@ class Task
     	void setSubject(const std::string& newSub) { subject = newSub; }
     	void setStart(time_t newStart) { start = newStart; }
     	void setEnd(time_t newEnd) { end = newEnd; }
-    	
+
     	json toJSON() const {
     		json j;
     		j["id"] = id;
@@ -109,9 +102,9 @@ class Task
             return result;
         }
 
-    	Status getStatus() const { return status; }
+    	int getStatus() const { return status; }
     	Priority getPriority() const { return priority; }
-    	void setStatus(Status s) { status = s; }
+    	void setStatus(int s) { status = s; }
     	void setPriority(Priority p) { priority = p; }
     	std::string priorityString(Priority p) {
     		switch (p)
@@ -129,12 +122,26 @@ class Task
     	// print task
     	void printTask()
     	{
-    		cout << "Task ID: " << id << "\n"
-    				  << "Name: " << name << "\n"
-    				  << "Status: "
-    				  << (status == Status::pending ? "Pending" : "Completed")
-    				  << "\n"
-    				  << "Priority: " << priorityString(priority) << "\n\n";
+            int max = 30;
+            int filled = floor(status/100 * max);
+            int unfilled = 30-filled;
+    		cout
+                << "Task ID: " << id << "\n-----------"
+                << "Name: " << name << "\n"
+                << "Status: \n";
+            for (int i=0; i<30; i++)
+            {
+                if (i < filled)
+                {
+                    cout << "█";
+                }
+                else
+                {
+                    cout << "▒";
+                }
+            }
+            cout << "\n"
+                << "Priority: " << priorityString(priority) << "\n\n";
     	}
 };
 
