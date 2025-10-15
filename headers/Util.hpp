@@ -44,7 +44,7 @@ bool initDatabase() {
 		
 		// lists table
 		"CREATE TABLE IF NOT EXISTS subjects ("
-		"name PRIMARY KEY TEXT UNIQUE NOT NULL,"
+		"name TEXT PRIMARY KEY UNIQUE NOT NULL,"
 		"color TEXT NOT NULL"
 		");",
 	};
@@ -125,7 +125,7 @@ bool writeTask(Task task) {
 	const char* sql = "INSERT INTO tasks (name, description, location, subject, start_time, end_time, status, priority) "
 					"VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 	sqlite3_stmt* stmt;
-	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
@@ -414,7 +414,7 @@ bool editTaskInteractive(int taskId, const string& field) {
 		if (parsedTime == 0) {
 			return false;
 		}
-		return updateTask(taskId, field, static_cast<int>(parsedTime));
+		return editTask(taskId, field, to_string(parsedTime));
 	}
 
 	// Update the field
@@ -440,4 +440,6 @@ bool editTaskInteractive(int taskId, const string& field) {
 
 	cout << "Task " << taskId << " field '" << field << "' updated" << endl;
 	return true;
+}
+
 }
