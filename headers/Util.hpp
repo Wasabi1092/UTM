@@ -292,36 +292,6 @@ bool showAll() {
 	return true;
 }
 
-// update task status or priority
-bool updateTask(int taskId, const string& field, int value) {
-	if (!db) {
-		cerr << "Database not initialized" << endl;
-		return false;
-	}
-
-	string sql = "UPDATE tasks SET " + field + " = ? WHERE id = ?;";
-
-	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
-	if (rc != SQLITE_OK) {
-		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
-		return false;
-	}
-
-	sqlite3_bind_int(stmt, 1, value);
-	sqlite3_bind_int(stmt, 2, taskId);
-
-	rc = sqlite3_step(stmt);
-	sqlite3_finalize(stmt);
-
-	if (rc != SQLITE_DONE) {
-		cerr << "Failed to update task: " << sqlite3_errmsg(db) << endl;
-		return false;
-	}
-
-	cout << "Task " << taskId << " updated" << endl;
-	return true;
-}
 
 // Get current value of a task field
 string getTaskField(int taskId, const string& field) {
@@ -452,6 +422,4 @@ bool editTaskInteractive(int taskId, const string& field) {
 
 	cout << "Task " << taskId << " field '" << field << "' updated" << endl;
 	return true;
-}
-
 }

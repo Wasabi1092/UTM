@@ -16,7 +16,6 @@ int main(int argc, char *argv[]) {
         cout << "  delete <task_id>" << endl;
         cout << "  show <list_name>" << endl;
         cout << "  show all" << endl;
-        cout << "  update <task_id> <field> <value>" << endl;
         return 1;
     }
 
@@ -114,22 +113,6 @@ int main(int argc, char *argv[]) {
         } else {
             util::showSubject(arg);
         }
-
-    } else if (command == "update") {
-		// usage
-        if (argc < 5) {
-            cout << "Usage: update <task_id> <field> <value>" << endl;
-            cout << "Fields: status (0=pending, 1=completed), priority (0=low, 1=medium, 2=high)" << endl;
-            return 1;
-        }
-
-		// args
-        int taskId = stoi(argv[2]);
-        string field = argv[3];
-        int value = stoi(argv[4]);
-
-		// update the task
-        util::updateTask(taskId, field, value);
 
     } else {
         cout << "Unknown command: " << command << endl;
