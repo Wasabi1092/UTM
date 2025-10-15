@@ -390,36 +390,7 @@ bool editTaskInteractive(int taskId, const string& field) {
 	// Read edited content
 	string newValue = readEditedContent();
 
-	// Handle special cases for time fields
-	if (field == "start_time" || field == "end_time") {
-		time_t parsedTime = parseTime(newValue);
-		if (parsedTime == 0) {
-			return false;
-		}
-		return updateTask(taskId, field, static_cast<int>(parsedTime));
-	}
 
-	// Update the field
-	string sql = "UPDATE tasks SET " + field + " = ? WHERE id = ?;";
-
-	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
-	if (rc != SQLITE_OK) {
-		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
-		return false;
-	}
-
-	sqlite3_bind_text(stmt, 1, newValue.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_int(stmt, 2, taskId);
-
-	rc = sqlite3_step(stmt);
-	sqlite3_finalize(stmt);
-
-	if (rc != SQLITE_DONE) {
-		cerr << "Failed to update task: " << sqlite3_errmsg(db) << endl;
-		return false;
-	}
-
-	cout << "Task " << taskId << " field '" << field << "' updated" << endl;
-	return true;
+	return editTask(taskId, field, newValue);
+}
 }
