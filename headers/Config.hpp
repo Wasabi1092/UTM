@@ -55,14 +55,14 @@ namespace config
 		// input validation
 		if (name.empty() || color.empty())
 		{
-			std::cout << "⚠️ Subject name and color cannot be empty.\n";
+			std::cout << "⚠️  Subject name and color cannot be empty.\n";
 			return;
 		}
 
 		// check for duplicates using subjectExists
 		if (subjectExists(db, name))
 		{
-			std::cout << "⚠️ Subject '" << name << "' already exists.\n";
+			std::cout << "⚠️  Subject '" << name << "' already exists.\n";
 			return;
 		}
 
@@ -72,7 +72,7 @@ namespace config
 
 		if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
 		{
-			std::cerr << "⚠️ Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+			std::cerr << "⚠️  Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 			return;
 		}
 
@@ -82,7 +82,7 @@ namespace config
 
 		if (sqlite3_step(stmt) != SQLITE_DONE)
 		{
-			std::cerr << "⚠️ Failed to add subject: " << sqlite3_errmsg(db) << std::endl;
+			std::cerr << "⚠️  Failed to add subject: " << sqlite3_errmsg(db) << std::endl;
 		}
 		else
 		{
@@ -97,7 +97,7 @@ namespace config
 	{
 		if (!subjectExists(db, name))
 		{
-			std::cout << "⚠️ Subject '" << name << "' does not exists.\n";
+			std::cout << "⚠️  Subject '" << name << "' does not exists.\n";
 			return;
 		}
 
@@ -107,7 +107,7 @@ namespace config
 
 		if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
 		{
-			std::cerr << "⚠️ Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+			std::cerr << "⚠️  Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 			return;
 		}
 
@@ -117,7 +117,7 @@ namespace config
 
 		if (sqlite3_step(stmt) != SQLITE_DONE)
 		{
-			std::cerr << "⚠️ Failed to update subject color: " << sqlite3_errmsg(db) << std::endl;
+			std::cerr << "⚠️  Failed to update subject color: " << sqlite3_errmsg(db) << std::endl;
 		}
 		else
 		{
