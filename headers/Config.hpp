@@ -1,148 +1,129 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
-#include <iomanip>
 #include <vector>
-#include "../nlohmann/json.hpp"
+#include <sqlite3.h>
 
-using json = nlohmann::json;
+// manages subject data (name & color) in SQLite
 
 namespace config
 {
-    json data = {};
+	// helper to convert string to lowercase (check for both name and color)
+	std::string toLower(const std::string &str)
+	{
+		std::string res = "";
+		for (char c : str)
+		{
+			res.push_back(tolower(c));
+		}
+		return res;
+	}
 
-    // save config file
-    bool save(const std::string &filename = "config.json")
-    {
-        std::ofstream f(filename);
-        if (!f.is_open())
-        {
-            std::cerr << "⚠️ Could not open file for writing: " << filename << std::endl;
-            return false;
-        }
+	// helper to check if a subject already exists in the database
+	bool subjectExists(sqlite3 *db, const std::string &name)
+	{
+		std::string sub = toLower(name);
+		const char *sql = "SELECT name FROM subjects;";
+		sqlite3_stmt *stmt;
+		bool exists = false;
 
-        // write config file with data
-        f << std::setw(4) << data;
-        f.close();
-        return true;
-    }
+		// -1 means use the full length of sql string, &stmt is where the prepared statment stored
+		if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+		{
+			// runs the statement and steps through each row in the result set
+			while (sqlite3_step(stmt) == SQLITE_ROW) // step moves to the next row till SQLITE_DONE
+			{
+				// get first column which returns pointer to a C-style string
+				std::string existingName = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+				if (toLower(existingName) == sub)
+				{
+					exists = true;
+					break;
+				}
+			}
+		}
 
-    // create default config file
-    void createDefault(const std::string &filename = "config.json")
-    {
-        data = {
-            {"subjects", json::array()}};
+		// cleans up and frees memory used by the prepared statement
+		sqlite3_finalize(stmt);
+		return exists;
+	}
 
-        save(filename);
-    }
+	// add subject & color
+	void addSubject(sqlite3 *db, const std::string &name, const std::string &color)
+	{
+		// input validation
+		if (name.empty() || color.empty())
+		{
+			std::cout << "⚠️ Subject name and color cannot be empty.\n";
+			return;
+		}
 
-    // load config file
-    bool load(const std::string &filename = "config.json")
-    {
-        std::ifstream f(filename);
-        if (!f.is_open())
-        {
-            std::cout << "⚠️ Config file not found. Creating a new one..." << std::endl;
-            createDefault(filename);
-            return true;
-        }
+		// check for duplicates using subjectExists
+		if (subjectExists(db, name))
+		{
+			std::cout << "⚠️ Subject '" << name << "' already exists.\n";
+			return;
+		}
 
-        try
-        {
-            f >> data;
-        }
-        catch (const std::exception &e)
-        {
-            std::cerr << "⚠️ Error reading config: " << e.what() << std::endl;
-            return false;
-        }
+		// insert subject
+		const char *sql = "INSERT INTO subjects (name, color) VALUES (?,?);";
+		sqlite3_stmt *stmt;
 
-        f.close();
-        return true;
-    }
+		if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+		{
+			std::cerr << "⚠️ Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+			return;
+		}
 
-    // add subject to config file
-    void addSubject(const std::string &name, const std::string &colour)
-    {
-        if (!data.contains("subjects"))
-        {
-            data["subjects"] = json::array();
-        }
+		// bind text
+		sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt, 2, color.c_str(), -1, SQLITE_TRANSIENT);
 
-        // check for duplicates
-        for (auto &sub : data["subjects"])
-        {
-            if (sub["name"] == name)
-            {
-                std::cout << "⚠️ Subject '" << name << "' already exists." << std::endl;
-                return;
-            }
-        }
+		if (sqlite3_step(stmt) != SQLITE_DONE)
+		{
+			std::cerr << "⚠️ Failed to add subject: " << sqlite3_errmsg(db) << std::endl;
+		}
+		else
+		{
+			std::cout << "✅ Added subject: " << name << " (" << color << ")\n";
+		}
 
-        data["subjects"].push_back({{"name", name}, {"colour", colour}});
-        save();
-        std::cout << "✅ Added subject: " << name << " (" << colour << ")" << std::endl;
-    }
+		sqlite3_finalize(stmt);
+	}
 
-    // print subjects
-    void printSubjects()
-    {
-        if (!data.contains("subjects") || data["subjects"].empty())
-        {
-            std::cout << "No subjects defined yet" << std::endl;
-            return;
-        }
+	// edit color
+	void editSubjectColor(sqlite3 *db, const std::string &name, const std::string &newColor)
+	{
+		if (!subjectExists(db, name))
+		{
+			std::cout << "⚠️ Subject '" << name << "' does not exists.\n";
+			return;
+		}
 
-        std::cout << "\n📙 Subjects:\n";
-        for (auto &sub : data["subjects"])
-        {
-            std::cout << "- " << sub["name"] << " (" << sub["colour"] << ")\n";
-        }
-        std::cout << std::endl;
-    }
+		// update table (subject's colour)
+		const char *sql = "UPDATE subjects SET color = ? WHERE LOWER(name) = LOWER(?);";
+		sqlite3_stmt *stmt;
 
-    // return list of subjects
-    std::vector<std::string> getSubjects()
-    {
-        std::vector<std::string> list;
-        if (!data.contains("subjects"))
-            return list; // empty list
-        for (auto &sub : data["subjects"])
-        {
-            list.push_back(sub["name"]);
-        }
-        return list;
-    }
+		if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+		{
+			std::cerr << "⚠️ Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+			return;
+		}
 
-    // helper to split key paths
-    std::vector<std::string>
-    splitKey(const std::string &path)
-    {
-        std::vector<std::string> keys;
-        std::stringstream ss(path);
-        std::string token;
-        while (std::getline(ss, token, '.'))
-            keys.push_back(token);
-        return keys;
-    }
+		// bind text to ? in the query
+		sqlite3_bind_text(stmt, 1, newColor.c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_TRANSIENT);
 
-    // load json file
-    json loadConfig(const std::string &path)
-    {
-        std::ifstream file(path);
-        json j;
-        if (file.is_open())
-        {
-            file >> j;
-            file.close();
-        }
-        else
-        {
-            std::cerr << "Could not open " << path << "\n";
-        }
-        return j;
-    }
+		if (sqlite3_step(stmt) != SQLITE_DONE)
+		{
+			std::cerr << "⚠️ Failed to update subject color: " << sqlite3_errmsg(db) << std::endl;
+		}
+		else
+		{
+			std::cout << "🎨 Updated: '" << name << "' to colour: " << newColor << "\n";
+		}
+
+		sqlite3_finalize(stmt);
+	}
 }
