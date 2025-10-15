@@ -3,7 +3,6 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include "Task.hpp"
 #include <algorithm>
 #include <vector>
@@ -12,46 +11,60 @@
 #include <ctime>
 
 using namespace std;
-using json = nlohmann::json;
 
 namespace util {
 
 // database connection
 sqlite3* db = nullptr;
 
-// initialise database and create tables
+// INITIALISE DATABASE
 bool initDatabase() {
+	// check if database file exists
 	int rc = sqlite3_open("tasks.db", &db);
 	if (rc) {
 		cerr << "Can't open database: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
 	
-	// create table if it doesn't exist
-	const char* sql = "CREATE TABLE IF NOT EXISTS tasks ("
-					"id INTEGER PRIMARY KEY AUTOINCREMENT,"
-					"name TEXT NOT NULL,"
-					"description TEXT,"
-					"location TEXT,"
-					"subject TEXT,"
-					"list_name TEXT NOT NULL,"
-					"start_time INTEGER,"
-					"end_time INTEGER,"
-					"status INTEGER DEFAULT 0,"
-					"priority INTEGER DEFAULT 1"
-					");";
+	// create tables if they don't exist
+	const char* createTables[] = {
+		// tasks table (without list_name)
+		"CREATE TABLE IF NOT EXISTS tasks ("
+		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
+		"name TEXT NOT NULL,"
+		"description TEXT,"
+		"location TEXT,"
+		"subject TEXT,"
+		"start_time TIMESTAMP,"
+		"end_time TIMESTAMP,"
+		"status INTEGER DEFAULT 0,"
+		"priority INTEGER DEFAULT 1"
+		");",
+		
+		// lists table
+		"CREATE TABLE IF NOT EXISTS subjects ("
+		"name PRIMARY KEY TEXT UNIQUE NOT NULL,"
+		"color TEXT NOT NULL"
+		");",
+	};
 	
-	// execute the sql statement
+
+	// execute all create table statements
 	char* errMsg = 0;
-	rc = sqlite3_exec(db, sql, 0, 0, &errMsg);
-	if (rc != SQLITE_OK) {
-		cerr << "SQL error: " << errMsg << endl;
-		sqlite3_free(errMsg);
-		return false;
+	for (int i = 0; i < 2; i++) {
+		// execute for each table
+		rc = sqlite3_exec(db, createTables[i], 0, 0, &errMsg);
+		if (rc != SQLITE_OK) {
+			cerr << "SQL error creating table " << i << ": " << errMsg << endl;
+			sqlite3_free(errMsg);
+			return false;
+		}
 	}
-	// if successful then return true`
+	
+	// return true if successful
 	return true;
 }
+
 
 // close database connection
 void closeDatabase() {
@@ -61,37 +74,82 @@ void closeDatabase() {
 	}
 }
 
-// load lists from data.json
-json loadLists() {
-	ifstream file("data.json");
-	json j;
-	if (file.is_open()) {
-		file >> j;
-		file.close();
-	}
-	return j;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // add a new task
-bool addTask(const string& listName, const string& taskName, const string& description = "", 
-			const string& location = "", const string& subject = "", 
-			Priority priority = Priority::medium) {
+bool addTask(string& listName, string& taskName, string& description, string& location, string& subject, Priority priority = Priority::medium) {
 	if (!db) {
 		cerr << "Database not initialized" << endl;
 		return false;
 	}
 	
-	json lists = loadLists();
-	if (lists.find(listName) == lists.end()) {
-		cerr << "List '" << listName << "' not found in data.json" << endl;
+	// prepare statement
+	string sql = "SELECT COUNT(*) FROM lists WHERE name = ?;";
+	sqlite3_stmt* stmt;
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
+	if (rc != SQLITE_OK) {
+		cerr << "Failed to prepare check statement: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
 	
-	const char* sql = "INSERT INTO tasks (name, description, location, subject, list_name, start_time, end_time, status, priority) "
-					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	// bind values
+	sqlite3_bind_text(stmt, 1, listName.c_str(), -1, SQLITE_STATIC);
+	if (sqlite3_step(checkStmt) == SQLITE_ROW) {
+		int count = sqlite3_column_int(stmt, 0);
+		sqlite3_finalize(stmt);
+		if (count == 0) {
+			cerr << "List '" << listName << "' not found" << endl;
+			return false;
+		}
+	}
+	
+	// insert task
+	const char* sql = "INSERT INTO tasks (name, description, location, subject, start_time, end_time, status, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 	
 	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
@@ -100,21 +158,41 @@ bool addTask(const string& listName, const string& taskName, const string& descr
 	time_t now;
 	time(&now);
 	
+	// replacing each question mark with the value
 	sqlite3_bind_text(stmt, 1, taskName.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, description.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 3, location.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 4, subject.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 5, listName.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_int64(stmt, 5, now);
 	sqlite3_bind_int64(stmt, 6, now);
-	sqlite3_bind_int64(stmt, 7, now);
-	sqlite3_bind_int(stmt, 8, 0); // Status::pending
-	sqlite3_bind_int(stmt, 9, static_cast<int>(priority));
+	sqlite3_bind_int(stmt, 7, 0); // Status::pending
+	sqlite3_bind_int(stmt, 8, static_cast<int>(priority));
+	
+	rc = sqlite3_step(stmt);
+	int taskId = sqlite3_last_insert_rowid(db);
+	sqlite3_finalize(stmt);
+	
+	if (rc != SQLITE_DONE) {
+		cerr << "Failed to insert task: " << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	
+	// insert into task_lists junction table
+	const char* junctionSql = "INSERT INTO task_lists (task_id, list_name) VALUES (?, ?);";
+	rc = sqlite3_prepare_v2(db, junctionSql, -1, &stmt, 0);
+	if (rc != SQLITE_OK) {
+		cerr << "Failed to prepare junction statement: " << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	
+	sqlite3_bind_int(stmt, 1, taskId);
+	sqlite3_bind_text(stmt, 2, listName.c_str(), -1, SQLITE_STATIC);
 	
 	rc = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
 	
 	if (rc != SQLITE_DONE) {
-		cerr << "Failed to insert task: " << sqlite3_errmsg(db) << endl;
+		cerr << "Failed to link task to list: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
 	
@@ -124,6 +202,7 @@ bool addTask(const string& listName, const string& taskName, const string& descr
 
 // edit a task
 bool editTask(int taskId, const string& field, const string& newValue) {
+	// check database
 	if (!db) {
 		cerr << "Database not initialized" << endl;
 		return false;
@@ -160,10 +239,22 @@ bool deleteTask(int taskId) {
 		return false;
 	}
 	
-	const char* sql = "DELETE FROM tasks WHERE id = ?;";
-	
+	// delete from junction table first
+	const char* junctionSql = "DELETE FROM task_lists WHERE task_id = ?;";
 	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+	int rc = sqlite3_prepare_v2(db, junctionSql, -1, &stmt, 0);
+	if (rc != SQLITE_OK) {
+		cerr << "Failed to prepare junction statement: " << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	
+	sqlite3_bind_int(stmt, 1, taskId);
+	sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+	
+	// delete from tasks table
+	const char* sql = "DELETE FROM tasks WHERE id = ?;";
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
@@ -190,16 +281,33 @@ bool showList(const string& listName) {
 		return false;
 	}
 	
-	json lists = loadLists();
-	if (lists.find(listName) == lists.end()) {
-		cerr << "List '" << listName << "' not found in data.json" << endl;
+	// check if list exists
+	const char* checkSql = "SELECT COUNT(*) FROM lists WHERE name = ?;";
+	sqlite3_stmt* checkStmt;
+	int rc = sqlite3_prepare_v2(db, checkSql, -1, &checkStmt, 0);
+	if (rc != SQLITE_OK) {
+		cerr << "Failed to prepare check statement: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
 	
-	const char* sql = "SELECT * FROM tasks WHERE list_name = ? ORDER BY priority DESC, id;";
+	sqlite3_bind_text(checkStmt, 1, listName.c_str(), -1, SQLITE_STATIC);
+	if (sqlite3_step(checkStmt) == SQLITE_ROW) {
+		int count = sqlite3_column_int(checkStmt, 0);
+		sqlite3_finalize(checkStmt);
+		if (count == 0) {
+			cerr << "List '" << listName << "' not found" << endl;
+			return false;
+		}
+	}
+	
+	const char* sql = "SELECT t.id, t.name, t.description, t.location, t.subject, t.status, t.priority "
+					"FROM tasks t "
+					"JOIN task_lists tl ON t.id = tl.task_id "
+					"WHERE tl.list_name = ? "
+					"ORDER BY t.priority DESC, t.id;";
 	
 	sqlite3_stmt* stmt;
-	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << endl;
 		return false;
@@ -217,8 +325,8 @@ bool showList(const string& listName) {
 		const char* description = (const char*)sqlite3_column_text(stmt, 2);
 		const char* location = (const char*)sqlite3_column_text(stmt, 3);
 		const char* subject = (const char*)sqlite3_column_text(stmt, 4);
-		int status = sqlite3_column_int(stmt, 8);
-		int priority = sqlite3_column_int(stmt, 9);
+		int status = sqlite3_column_int(stmt, 5);
+		int priority = sqlite3_column_int(stmt, 6);
 		
 		cout << "Task ID: " << id << endl;
 		cout << "Name: " << (name ? name : "") << endl;
@@ -252,7 +360,10 @@ bool showAll() {
 		return false;
 	}
 	
-	const char* sql = "SELECT * FROM tasks ORDER BY list_name, priority DESC, id;";
+	const char* sql = "SELECT t.id, t.name, t.description, t.location, t.subject, t.status, t.priority, tl.list_name "
+					"FROM tasks t "
+					"JOIN task_lists tl ON t.id = tl.task_id "
+					"ORDER BY tl.list_name, t.priority DESC, t.id;";
 	
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
@@ -266,7 +377,7 @@ bool showAll() {
 	
 	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 		found = true;
-		const char* listName = (const char*)sqlite3_column_text(stmt, 5);
+		const char* listName = (const char*)sqlite3_column_text(stmt, 7);
 		
 		if (currentList != listName) {
 			currentList = listName;
@@ -278,8 +389,8 @@ bool showAll() {
 		const char* description = (const char*)sqlite3_column_text(stmt, 2);
 		const char* location = (const char*)sqlite3_column_text(stmt, 3);
 		const char* subject = (const char*)sqlite3_column_text(stmt, 4);
-		int status = sqlite3_column_int(stmt, 8);
-		int priority = sqlite3_column_int(stmt, 9);
+		int status = sqlite3_column_int(stmt, 5);
+		int priority = sqlite3_column_int(stmt, 6);
 		
 		cout << "Task ID: " << id << endl;
 		cout << "Name: " << (name ? name : "") << endl;
