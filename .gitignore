@@ -9,3 +9,5 @@ src/sqlite3.c
 tasks.db
 *.zip
 sqlite*/
+test
+test.cpp

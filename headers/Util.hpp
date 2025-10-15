@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include "Task.hpp"
 #include <algorithm>
 #include <vector>
@@ -441,5 +441,106 @@ bool editTaskInteractive(int taskId, const string& field) {
 	cout << "Task " << taskId << " field '" << field << "' updated" << endl;
 	return true;
 }
+
+
+
+
+
+
+// some extra colour functions
+/*
+	1. map of colours
+	2. function to check if it's valid
+	3. format string with colour
+*/
+
+
+// colour: [foreground, background]
+map<string, vector<string>> colours = {
+	{"red", {"\033[31m","\033[41m"}},
+	{"green", {"\033[32m","\033[42m"}},
+	{"yellow", {"\033[33m","\033[43m"}},
+	{"blue", {"\033[34m","\033[44m"}},
+	{"magenta", {"\033[35m","\033[45m"}},
+	{"cyan", {"\033[36m","\033[46m"}},
+	{"white", {"\033[37m","\033[47m"}},
+	{"default", {"\033[39m","\033[49m"}},
+	{"black", {"\033[30m","\033[40m"}},
+};
+
+bool isValidColor(string colour) {
+	// if empty bad
+	if (colour.empty()) {
+		return false;
+	}
+	
+	// check hex first
+	if (colour[0] == '#') {
+		// not right length? grrr
+		if (colour.length() != 7 || colour[0] != '#') {
+			return false;
+		}
+		
+		// not right characters? grrrrrrr
+		for (int i = 1; i < 7; i++) {
+			char c = colour[i];
+			if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	// then check map
+	return colours.find(colour) != colours.end();
+}
+
+
+// allows for name and hex colours
+string colourText(string text, string foreground = "default", string background = "default") {
+	
+	// check if valid colour
+	if (!foreground.empty() && !isValidColor(foreground)) {
+		foreground = "white";
+	}
+	if (!background.empty() && !isValidColor(background)) {
+		background = "default";
+	}
+	
+	string result = "";
+
+	//foreground
+	if (colours.find(foreground) != colours.end()) {
+		result += colours[foreground][0];
+	} else if (foreground[0] == '#') {
+		string rgb = foreground.substr(1, 6);
+		int r = stoi(rgb.substr(0, 2), nullptr, 16);
+		int g = stoi(rgb.substr(2, 2), nullptr, 16);
+		int b = stoi(rgb.substr(4, 2), nullptr, 16);
+		result += "\033[38;2;" + to_string(r) + ";" + to_string(g) + ";" + to_string(b) + "m";
+	}
+
+	// background
+	if (colours.find(background) != colours.end()) {
+		result += colours[background][1];
+	} else if (background[0] == '#') {
+		string rgb = background.substr(1, 6);
+		int r = stoi(rgb.substr(0, 2), nullptr, 16);
+		int g = stoi(rgb.substr(2, 2), nullptr, 16);
+		int b = stoi(rgb.substr(4, 2), nullptr, 16);
+		result += "\033[48;2;" + to_string(r) + ";" + to_string(g) + ";" + to_string(b) + "m";
+	}
+	
+	result += text;
+	result += "\033[0m";
+	return result;
+}
+
+
+
+
+
+
 
 }
