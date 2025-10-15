@@ -7,3 +7,5 @@ nlohmann/*
 src/sqlite3.h
 src/sqlite3.c
 tasks.db
+*.zip
+sqlite*/

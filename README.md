@@ -45,18 +45,30 @@ why we chose UTM
 
 ### Prerequisites
 - Linux or WSL environment
-- g++ (C++20 or higher)
-- `make`
-- [nlohmann/json](https://github.com/nlohmann/json) library (DOUBLE CHECK IF WE REALLY USE IT)
+- g++
+- sqlite
+
+### Installing sqlite
+
+For MacOS
+```bash
+brew install sqlite
+```
+For Debian/Ubuntu
+```bash
+sudo apt-get install libsqlite3-dev
+
+```
+
 
 ### Clone and Build
 ```bash
+
+
 # Clone the repository
 git clone https://github.com/Wasabi1092/UTM.git
 cd UTM
-
-# Build using Makefile
-make
+g++ main.cpp -std=c++17 -lsqlite3 -o utm
 
 # Run the program
 ./utm
@@ -78,4 +90,3 @@ examples of add, list, mark, delete, edit, configuration command line
 ---
 
 ## Future Improvements
-
