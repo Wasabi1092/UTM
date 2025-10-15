@@ -1,12 +1,12 @@
 {
-    "subjects": [
-        {
-            "colour": "blue",
-            "name": "Work"
-        },
-        {
-            "colour": "green",
-            "name": "Study"
-        }
-    ]
+  "subjects": [
+    {
+      "colour": "blue",
+      "name": "Work"
+    },
+    {
+      "colour": "green",
+      "name": "Study"
+    }
+  ]
 }
