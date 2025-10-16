@@ -393,7 +393,7 @@ namespace util {
 
         std::cout << "========== " << subjectName << " TASKS ==========" << std::endl;
 
-        for (int i=0; i<tasks.size() ; i++) {
+        for (int i=0; i<(int)tasks.size() ; i++) {
             printTask(tasks[i]);
         }
         return true;
@@ -415,7 +415,7 @@ namespace util {
             return false;
         }
         std::vector<Task *> tasks = readTasks(rc, stmt);
-        for (int i=0; i<tasks.size(); i++) {
+        for (int i=0; i<(int)tasks.size(); i++) {
             printTask(tasks[i]);
         }
         if (tasks.size() == 0) {

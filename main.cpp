@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <cstring>
 #include "headers/Task.hpp"
 #include "headers/Util.hpp"
 #include "headers/Config.hpp"
