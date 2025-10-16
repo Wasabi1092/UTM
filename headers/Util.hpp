@@ -468,7 +468,7 @@ map<string, vector<string>> colours = {
 	{"black", {"\033[30m","\033[40m"}},
 };
 
-bool isValidColor(string colour) {
+bool isValidColour(string colour) {
 	// if empty bad
 	if (colour.empty()) {
 		return false;
@@ -501,10 +501,10 @@ bool isValidColor(string colour) {
 string colourText(string text, string foreground = "default", string background = "default") {
 	
 	// check if valid colour
-	if (!foreground.empty() && !isValidColor(foreground)) {
+	if (!foreground.empty() && !isValidColour(foreground)) {
 		foreground = "white";
 	}
-	if (!background.empty() && !isValidColor(background)) {
+	if (!background.empty() && !isValidColour(background)) {
 		background = "default";
 	}
 	
