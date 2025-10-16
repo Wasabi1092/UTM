@@ -145,7 +145,7 @@ bool writeTask(Task task) {
 		cerr << "Failed to insert task: " << sqlite3_errmsg(db) << endl;
 		return false;
 	}
-	cout << "Task '" << task.getName() << "' added to list '" << task.getSubject() << "'" << endl;
+	cout << "Task '" << task.getName() << "' added to subject '" << task.getSubject() << "'" << endl;
 	return true;
 }
 
