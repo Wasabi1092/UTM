@@ -2,47 +2,47 @@
 #include <string>
 #include "headers/Task.hpp"
 #include "headers/Util.hpp"
+#include "headers/Config.hpp"
 
-using namespace std;
 
 int main(int argc, char *argv[]) {
 	// show usage
     if (argc < 2) {
-        cout << "Usage: " << argv[0] << " <command> [arguments...]" << endl;
-        cout << "Commands:" << endl;
-        cout << "  add <list_name> <task_name> [description] [location] [subject] [priority]" << endl;
-        cout << "  edit <task_id> <field> [new_value]" << endl;
-        cout << "  edit-interactive <task_id> <field>" << endl;
-        cout << "  delete <task_id>" << endl;
-        cout << "  show <list_name>" << endl;
-        cout << "  show all" << endl;
+        std::cout << "Usage: " << argv[0] << " <command> [arguments...]" << std::endl;
+        std::cout << "Commands:" << std::endl;
+        std::cout << "  add <list_name> <task_name> [description] [location] [subject] [priority]" << std::endl;
+        std::cout << "  edit <task_id> <field> [new_value]" << std::endl;
+        std::cout << "  edit-interactive <task_id> <field>" << std::endl;
+        std::cout << "  delete <task_id>" << std::endl;
+        std::cout << "  show <subject_name>" << std::endl;
+        std::cout << "  show all" << std::endl;
         return 1;
     }
 
     // initialise and if fails then return 1
     if (!util::initDatabase()) {
-        cerr << "Failed to initialise database" << endl;
+        std::cerr << "Failed to initialise database" << std::endl;
         return 1;
     }
 
-    string command = argv[1];
+    std::string command = argv[1];
 
     if (command == "add") {
 		// usage
         if (argc < 4) {
-            cout << "Usage: add --flag <value> [--flag <value> ...]" << endl;
-            cout << "Required flags: --name --subject" << endl;
-            cout << "Optional flags: --description, --location, --priority" << endl;
-            cout << "Priority: 1-5" << endl;
+            std::cout << "Usage: add --flag <value> [--flag <value> ...]" << std::endl;
+            std::cout << "Required flags: --name --subject" << std::endl;
+            std::cout << "Optional flags: --description, --location, --priority" << std::endl;
+            std::cout << "Priority: 1-5" << std::endl;
             return 1;
         }
 
 		// parse args
-        unordered_map<string, string> flags;
+        std::unordered_map<std::string, std::string> flags;
         bool hasName = false;
         bool hasSubject = false;
-        string currentFlag = "";
-        string currentValue = "";
+        std::string currentFlag = "";
+        std::string currentValue = "";
 
         // loop for each argument
         for (int i = 2; i < argc; i++) {
@@ -94,22 +94,22 @@ int main(int argc, char *argv[]) {
 
         // check for name
         if (!hasName) {
-            cout << util::colourText("Error: --name is required", "red") << endl;
+            std::cout << util::colourText("Error: --name is required", "red") << std::endl;
             return 1;
         }
 
         // check for subject
         if (!hasSubject) {
-            cout << util::colourText("Error: --subject is required", "red") << endl;
+            std::cout << util::colourText("Error: --subject is required", "red") << std::endl;
             return 1;
         }
 
         // get values from flags
-        string taskName = flags["name"];
-        string subject = flags["subject"];
+        std::string taskName = flags["name"];
+        std::string subject = flags["subject"];
         // if flags exists then get the value, otherwise use empty string
-        string description = flags.count("description") > 0 ? flags["description"] : "";
-        string location = flags.count("location") > 0 ? flags["location"] : "";
+        std::string description = flags.count("description") > 0 ? flags["description"] : "";
+        std::string location = flags.count("location") > 0 ? flags["location"] : "";
         int priority = flags.count("priority") > 0 ? stoi(flags["priority"])%5 +1  : 0;
 
         // create task
@@ -118,25 +118,25 @@ int main(int argc, char *argv[]) {
     } else if (command == "edit") {
         // usage
         if (argc < 4) {
-            cout << "Usage: edit <task_id> <field> [new_value]" << endl;
-            cout << "Fields: name, description, location, subject, start_time, end_time, status" << endl;
-            cout << "If new_value is omitted, nano editor will open with current value" << endl;
+            std::cout << "Usage: edit <task_id> <field> [new_value]" << std::endl;
+            std::cout << "Fields: name, description, location, subject, start_time, end_time, status" << std::endl;
+            std::cout << "If new_value is omitted, nano editor will open with current value" << std::endl;
             return 1;
         }
 
         // args
-        int taskId = stoi(argv[2]);
-        string field = argv[3];
-        vector<string> valid = {"name", "description", "location", "subject", "start_time", "end_time", "status"};
+        int taskId = std::stoi(argv[2]);
+        std::string field = argv[3];
+        std::vector<std::string> valid = {"name", "description", "location", "subject", "start_time", "end_time", "status"};
         if (find(valid.begin(), valid.end(), field) == valid.end())
         {
-            cout << "Invalid Field" << endl;
+            std::cout << "Invalid Field" << std::endl;
             return 0;
         }
         // check if new_value is provided
         if (argc >= 5) {
             // direct edit with provided value
-            string newValue = argv[4];
+            std::string newValue = argv[4];
             util::editTask(taskId, field, newValue);
         } else {
             // interactive edit - open editor
@@ -146,32 +146,48 @@ int main(int argc, char *argv[]) {
     } else if (command == "delete") {
 		// usage
         if (argc < 3) {
-            cout << "Usage: delete <task_id>" << endl;
+            std::cout << "Usage: delete <task_id>" << std::endl;
             return 1;
         }
 
 		// args
-        int taskId = stoi(argv[2]);
+        int taskId = std::stoi(argv[2]);
         util::deleteTask(taskId);
 
     } else if (command == "show") {
 		// usage
         if (argc < 3) {
-            cout << "Usage: show <list_name> or show all" << endl;
+            std::cout << "Usage: show <subject_name> or show all" << std::endl;
             return 1;
         }
 
 		// args
-        string arg = argv[2];
+        std::string arg = argv[2];
         if (arg == "all") {
             util::showAll();
-        } else {
+        }
+        else {
             util::showSubject(arg);
         }
 
-    } else {
-        cout << "Unknown command: " << command << endl;
-        cout << "Available commands: add, edit, edit-interactive, delete, show, update" << endl;
+    }
+    else if (command == "set") {
+        if (argc < 4) {
+            std::cout << "Usage: set <subject_name> <colour> or show all" << std::endl;
+            std::cout << "Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black" << std::endl;
+            return 1;
+        }
+        std::string subject = argv[2];
+        std::string colour = argv[3];
+        if (!util::isValidColour(colour)) {
+            std::cout << "Invalid Colour! Please choose from the list below" << std::endl;
+            std::cout << "Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black" << std::endl;
+        }
+        config::editSubjectColor(util::db, subject, colour);
+    }
+    else {
+        std::cout << "Unknown command: " << command << std::endl;
+        std::cout << "Available commands: add, edit, edit-interactive, delete, show, update" << std::endl;
         return 1;
     }
 
