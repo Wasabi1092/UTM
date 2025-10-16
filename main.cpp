@@ -12,7 +12,6 @@ int main(int argc, char *argv[]) {
         std::cout << "Commands:" << std::endl;
         std::cout << "  add <list_name> <task_name> [description] [location] [subject] [priority]" << std::endl;
         std::cout << "  edit <task_id> <field> [new_value]" << std::endl;
-        std::cout << "  edit-interactive <task_id> <field>" << std::endl;
         std::cout << "  delete <task_id>" << std::endl;
         std::cout << "  show <subject_name>" << std::endl;
         std::cout << "  show all" << std::endl;
@@ -187,7 +186,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::cout << "Unknown command: " << command << std::endl;
-        std::cout << "Available commands: add, edit, edit-interactive, delete, show, update" << std::endl;
+        std::cout << "Available commands: add, edit, delete, show" << std::endl;
         return 1;
     }
 

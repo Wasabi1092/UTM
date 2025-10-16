@@ -57,14 +57,11 @@ brew install sqlite
 For Debian/Ubuntu
 ```bash
 sudo apt-get install libsqlite3-dev
-
 ```
 
 
 ### Clone and Build
 ```bash
-
-
 # Clone the repository
 git clone https://github.com/Wasabi1092/UTM.git
 cd UTM
@@ -79,14 +76,42 @@ g++ main.cpp -std=c++17 -lsqlite3 -o utm
 
 examples of add, list, mark, delete, edit, configuration command line
 
----
+```bash
+Usage: ./a.out <command> [arguments...]
+Commands:
+  add <list_name> <task_name> [description] [location] [subject] [priority]
+  edit <task_id> <field> [new_value]
+  edit-interactive <task_id> <field>
+  delete <task_id>
+  show <subject_name>
+  show all
+```
 
-## Project Structure?
+### add
 
----
+```bash
+Usage: add --flag <value> [--flag <value> ...]
+Required flags: --name --subject
+Optional flags: --description, --location, --priority
+Priority: 1-5
+```
 
-## Team Members and Contributions
+### edit
 
----
+```bash
+Usage: edit <task_id> <field> [new_value]
+Fields: name, description, location, subject, start_time, end_time, status
+If new_value is omitted, editor will open with current value
+```
 
-## Future Improvements
+### delete
+
+```bash
+Usage: delete <task_id>
+```
+
+### show
+
+```bash
+Usage: show <subject_name> or show all
+```
