@@ -10,7 +10,10 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         std::cout << "Usage: " << argv[0] << " <command> [arguments...]" << std::endl;
         std::cout << "Commands:" << std::endl;
-        std::cout << "  add <list_name> <task_name> [description] [location] [subject] [priority]" << std::endl;
+        std::cout << "  add --flag <value> [--flag <value> ...]" << std::endl;
+        std::cout << "      Required flags: --name --subject"<<std::endl;
+        std::cout << "      Optional flags: --description, --location, --priority"<<std::endl;
+        std::cout << "      Priority: 1-5"<<std::endl;
         std::cout << "  edit <task_id> <field> [new_value]" << std::endl;
         std::cout << "  delete <task_id>" << std::endl;
         std::cout << "  show <subject_name>" << std::endl;
