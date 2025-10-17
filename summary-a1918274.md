@@ -15,10 +15,8 @@ The development process for this project was quite unstructured and sometimes di
 However, this experience taught me the importance of consistent communication, clear task division, and writing an early planning document. Even though we faced coordination and communication challenges, it was rewarding to see the project come together at the end.
 
 ### Key Takeaways
-- Planning is critical
-    We underestimated how much structure was needed. Defining a proper plan and timeline would have saved a lot of back-and-forth later.
-- Communication keeps everyone aligned
-    There were gaps in communication that made collaboration harder. Regular check-ins or updates would have improved efficiency and teamwork.
+- Planning is critical. We underestimated how much structure was needed. Defining a proper plan and timeline would have saved a lot of back-and-forth later.
+- Communication keeps everyone aligned. There were gaps in communication that made collaboration harder. Regular check-ins or updates would have improved efficiency and teamwork.
 - Technical learning:
     - Gained practical experience with SQLite and prepared statements in C++.
     - Learned how to bind text parameters safely and query data efficiently.
