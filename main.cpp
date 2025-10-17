@@ -117,9 +117,9 @@ int main(int argc, char *argv[]) {
     } else if (command == "edit") {
         // usage
         if (argc < 4) {
-            std::cout << "Usage: edit <task_id> <field> [new_value]" << std::endl;
-            std::cout << "Fields: name, description, location, subject, start_time, end_time, status" << std::endl;
-            std::cout << "If new_value is omitted, nano editor will open with current value" << std::endl;
+            std::cout << util::colourText("Usage: edit <task_id> <field> [new_value]", "yellow") << std::endl;
+            std::cout << util::colourText("Fields: name, description, location, subject, start_time, end_time, status", "yellow") << std::endl;
+            std::cout << util::colourText("If new_value is omitted, nano editor will open with current value", "yellow") << std::endl;
             return 1;
         }
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
         std::vector<std::string> valid = {"name", "description", "location", "subject", "start_time", "end_time", "status"};
         if (find(valid.begin(), valid.end(), field) == valid.end())
         {
-            std::cout << "Invalid Field" << std::endl;
+            std::cout << util::colourText("Invalid Field", "red") << std::endl;
             return 0;
         }
         // check if new_value is provided
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     } else if (command == "delete") {
 		// usage
         if (argc < 3) {
-            std::cout << "Usage: delete <task_id>" << std::endl;
+            std::cout << util::colourText("Usage: delete <task_id>", "yellow") << std::endl;
             return 1;
         }
 
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
     } else if (command == "show") {
 		// usage
         if (argc < 3) {
-            std::cout << "Usage: show <subject_name> or show all" << std::endl;
+            std::cout << util::colourText("Usage: show <subject_name> or show all", "yellow") << std::endl;
             return 1;
         }
 
@@ -172,21 +172,21 @@ int main(int argc, char *argv[]) {
     }
     else if (command == "set") {
         if (argc < 4) {
-            std::cout << "Usage: set <subject_name> <colour> or show all" << std::endl;
-            std::cout << "Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black" << std::endl;
+            std::cout << util::colourText("Usage: set <subject_name> <colour>", "yellow") << std::endl;
+            std::cout << util::colourText("Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black", "yellow") << std::endl;
             return 1;
         }
         std::string subject = argv[2];
         std::string colour = argv[3];
         if (!util::isValidColour(colour)) {
-            std::cout << "Invalid Colour! Please choose from the list below" << std::endl;
-            std::cout << "Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black" << std::endl;
+            std::cout << util::colourText("Invalid Colour! Please choose from the list below", "red") << std::endl;
+            std::cout << util::colourText("Valid colours: red, green, yellow, blue, magenta, cyan, white, default, black", "yellow") << std::endl;
         }
         config::editSubjectColor(util::db, subject, colour);
     }
     else {
-        std::cout << "Unknown command: " << command << std::endl;
-        std::cout << "Available commands: add, edit, delete, show" << std::endl;
+        std::cout << util::colourText("Unknown command: " + command, "red") << std::endl;
+        std::cout << util::colourText("Available commands: add, edit, delete, show", "yellow") << std::endl;
         return 1;
     }
 

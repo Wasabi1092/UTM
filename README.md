@@ -1,13 +1,3 @@
-README checklist:
-1. project title description
-2. motivation: why we choose this project
-3. features
-4. how to install & run on linux (e.g. make)
-5. example usage (/ screenshots?)
-6. team members and contributions
-7. future improvements
-** add emoji or icon if want
-
 # Ultimate Task Manager (UTM)
 
 A lightweight, fast, and customisable **command-line task manager** built in **C++**.
@@ -15,15 +5,10 @@ UTM helps users to organise their tasks efficiently without relying on heavy GUI
 
 ---
 
-## Table of Contents
-- [Project Overview](#project-overview)
-
----
-
 ## Project Overview
 
 **UTM (Ultimate Task Manager)** is a command-line tool designed to help users manage their daily tasks directly from the terminal.
-It allows you to create, edit, delete, and mark tasks as complete, ((while storing data persistently in a JSON file. ??))
+It allows you to create, edit, delete, and mark tasks as complete, all the while saving it using an sqlite database.
 
 ---
 
@@ -34,10 +19,6 @@ It allows you to create, edit, delete, and mark tasks as complete, ((while stori
 - mark tasks as done
 - edit tasks (change description, priority, due date)
 - delete tasks
-
-## Motivation
-
-why we chose UTM
 
 ---
 
@@ -74,12 +55,10 @@ g++ main.cpp -std=c++17 -lsqlite3 -o utm
 
 ## Usage
 
-examples of add, list, mark, delete, edit, configuration command line
-
 ```bash
 Usage: ./a.out <command> [arguments...]
 Commands:
-  add <list_name> <task_name> [description] [location] [subject] [priority]
+  add --name <task_name> --subject <subject> [--description <description>] [--location <location>] [--priority <priority>]
   edit <task_id> <field> [new_value]
   edit-interactive <task_id> <field>
   delete <task_id>
