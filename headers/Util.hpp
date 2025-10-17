@@ -166,12 +166,12 @@ namespace util {
         // max 30 chars in progress bar
         int max = 30;
         int filled = std::floor((task->getStatus() * max) / 100);
-        std::string output = "Task ID: " + std::to_string(task->getId()) + "\n-----------\n";
-        output += "Name: " + task->getName() + "\n";
-        output += "Start Time: " + task->getStartString() + "\n";
-        output += "End Time: " + task->getEndString() + "\n";
-        output += "Status: " + std::to_string(task->getStatus()) + "/100\n";
-
+        std::string output = "Task ID: " + std::to_string(task->getId()) + "\t";
+        output += "Name: " + task->getName() + "\t";
+        output += "Subject: " + task->getSubject() + "\t";
+        output += "Status: " + std::to_string(task->getStatus()) + "/100\t";
+        output += "Priority: " + std::to_string(task->getPriority()) + "/5\t";
+        
         // status bar
         for (int i = 0; i < max; i++) {
             if (i < filled) {
@@ -181,16 +181,15 @@ namespace util {
                 output += "▒";
             }
         }
+        
 
-        output += "\nPriority: " + std::to_string(task->getPriority()) + "/5\n";
         std::string colour = config::getColour(db, task->getSubject());
 
         // get code for colour
         std::string mod = colours[colour][0];
 
         // output with colour
-        std::cout << mod << std::endl;
-        std::cout << output;
+        std::cout << colourText(output, colour) << std::endl;
     }
 
     // add a new task
